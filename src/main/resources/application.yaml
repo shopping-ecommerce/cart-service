@@ -1,0 +1,21 @@
+server:
+  port: 8086
+  servlet:
+    context-path: /cart
+
+spring:
+  data:
+    redis:
+      host: redis
+      port: 6379
+      timeout: 2000
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+cart:
+  ttl-seconds: 2592000   # 30 ngày
+
+client:
+  product:
+    base-url: http://product-service:8083/product
