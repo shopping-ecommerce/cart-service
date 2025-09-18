@@ -1,20 +1,31 @@
 server:
-  port: 8086
+  port: 8087
   servlet:
     context-path: /cart
 
 spring:
   data:
     redis:
-      host: redis
-      port: 6379
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
       timeout: 2000
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 60000
+            read-timeout: 120000
+          product-service:
+            url: ${FEIGN_PRODUCT:http://product-service:8083/product}
+            connect-timeout: 30000
+            read-timeout: 60000
   jackson:
     serialization:
       write-dates-as-timestamps: false
 
 cart:
-  ttl-seconds: 2592000   # 30 ngày
+  ttl-seconds: 2592000   # 30 ngï¿½y
 
 client:
   product:
