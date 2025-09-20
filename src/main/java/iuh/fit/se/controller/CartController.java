@@ -56,19 +56,13 @@ public class CartController {
                 .build();
     }
 
-    @PutMapping("/{userId}/items/{productId}")
-    public ApiResponse<Cart> updateCartItem(
-            @PathVariable("userId") String userId,
-            @PathVariable("productId") String productId,
-            @RequestParam("sellerId") String sellerId,
-            @RequestParam(value = "size", required = false) String size,
-            @RequestParam(value = "color", required = false) String color,
-            @Valid @RequestBody UpdateCartItemRequest request) {
+    @PutMapping("/{userId}/update")
+    public ApiResponse<Cart> updateCartItem(@Valid @RequestBody UpdateCartItemRequest request) {
 
         return ApiResponse.<Cart>builder()
                 .code(200)
                 .message("Cart item updated successfully")
-                .result(cartService.updateCartItem(userId, productId, sellerId, size, color, request.getQuantity()))
+                .result(cartService.updateCartItem(request))
                 .build();
     }
 
@@ -77,13 +71,12 @@ public class CartController {
             @PathVariable("userId") String userId,
             @PathVariable("productId") String productId,
             @RequestParam("sellerId") String sellerId,
-            @RequestParam(value = "size", required = false) String size,
-            @RequestParam(value = "color", required = false) String color) {
+            @RequestParam(value = "size", required = false) String size) {
 
         return ApiResponse.<Cart>builder()
                 .code(200)
                 .message("Cart item removed successfully")
-                .result(cartService.removeCartItem(userId, productId, sellerId, size, color))
+                .result(cartService.removeCartItem(userId, productId, sellerId, size))
                 .build();
     }
 

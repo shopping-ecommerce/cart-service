@@ -13,9 +13,9 @@ import java.math.BigDecimal;
 public class CartItemSummaryResponse {
     String productId;
     String productName;   // sẽ fetch từ product-service, demo thì hardcode
+    String productImage;
     Integer quantity;
     BigDecimal unitPrice;
     BigDecimal totalPrice;
     String size;
-    String color;
 }

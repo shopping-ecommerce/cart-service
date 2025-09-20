@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Data
 @NoArgsConstructor
@@ -16,4 +18,8 @@ public class UpdateCartItemRequest {
     @Min(value = 1, message = "Quantity must be at least 1")
     @Max(value = 99, message = "Quantity must not exceed 99")
     Integer quantity;
+    String userId;
+    String productId;
+    String sellerId;
+    String size;
 }

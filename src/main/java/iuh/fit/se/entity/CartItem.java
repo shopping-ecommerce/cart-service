@@ -12,8 +12,10 @@ import java.math.BigDecimal;
 public class CartItem {
     String productId;
     String sellerId;
+    String sellerName;
     String size;
-    String color;
+    String productImage;
+    String productName;
     BigDecimal unitPrice;
     Integer quantity;
     BigDecimal totalPrice;
@@ -29,7 +31,6 @@ public class CartItem {
     public String getUniqueKey() {
         return (sellerId != null ? sellerId : "") + "-" +
                 productId + "-" +
-                (size != null ? size : "") + "-" +
-                (color != null ? color : "");
+                (size != null ? size : "");
     }
 }
