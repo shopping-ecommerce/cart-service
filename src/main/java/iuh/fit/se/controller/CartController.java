@@ -1,6 +1,7 @@
 package iuh.fit.se.controller;
 
 import iuh.fit.se.dto.request.AddToCartRequest;
+import iuh.fit.se.dto.request.RemoveCartItemsRequest;
 import iuh.fit.se.dto.request.UpdateCartItemRequest;
 import iuh.fit.se.dto.response.ApiResponse;
 import iuh.fit.se.dto.response.CartItemSummaryResponse;
@@ -88,4 +89,17 @@ public class CartController {
                 .result(cartService.clearCart(userId))
                 .build();
     }
+
+    @DeleteMapping("/{userId}/items/batch")
+    public ApiResponse<Cart> removeCartItemsBatch(
+            @PathVariable("userId") String userId,
+            @RequestBody RemoveCartItemsRequest request) {  // Nhận body JSON với list
+
+        return ApiResponse.<Cart>builder()
+                .code(200)
+                .message("Cart items removed successfully")
+                .result(cartService.removeCartItemsBatch(userId, request))
+                .build();
+    }
+
 }

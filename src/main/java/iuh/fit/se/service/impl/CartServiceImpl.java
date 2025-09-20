@@ -1,6 +1,7 @@
 package iuh.fit.se.service.impl;
 
 import iuh.fit.se.dto.request.AddToCartRequest;
+import iuh.fit.se.dto.request.RemoveCartItemsRequest;
 import iuh.fit.se.dto.request.SearchSizeAndIDRequest;
 import iuh.fit.se.dto.request.UpdateCartItemRequest;
 import iuh.fit.se.dto.response.*;
@@ -248,6 +249,33 @@ public class CartServiceImpl implements CartService {
         return cartRepository.findByUserId(userId)
                 .map(Cart::getTotalItems)
                 .orElse(0);
+    }
+
+    @Override
+    public Cart removeCartItemsBatch(String userId, RemoveCartItemsRequest request) {
+        log.info("Removing batch cart items for user: {}", userId);
+
+        Cart cart = getCartByUserId(userId);
+
+        if (request.getItems() == null || request.getItems().isEmpty()) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // Tạo list uniqueKey từ request
+        List<String> uniqueKeysToRemove = request.getItems().stream()
+                .map(item -> createUniqueKey(item.getSellerId(), item.getProductId(), item.getSize()))
+                .collect(Collectors.toList());
+
+        // Xóa tất cả item matching uniqueKey trong list
+        boolean removedCount = cart.getItems().removeIf(item -> uniqueKeysToRemove.contains(item.getUniqueKey()));
+
+        if (!removedCount) {
+            throw new AppException(ErrorCode.SELLER_NOT_FOUND);
+        }
+
+        log.info("Removed {} items from cart", removedCount);
+        cart.calculateTotals();
+        return cartRepository.save(cart);
     }
 
     private String createUniqueKey(String sellerId, String productId, String size) {
