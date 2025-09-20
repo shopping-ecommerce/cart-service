@@ -1,6 +1,7 @@
 package iuh.fit.se.service;
 
 import iuh.fit.se.dto.request.AddToCartRequest;
+import iuh.fit.se.dto.request.RemoveCartItemsRequest;
 import iuh.fit.se.dto.request.UpdateCartItemRequest;
 import iuh.fit.se.dto.response.CartItemSummaryResponse;
 import iuh.fit.se.dto.response.CartSummaryResponse;
@@ -22,4 +23,6 @@ public interface CartService {
     CartSummaryResponse getCartSummary(String userId);
 
     int getCartItemCount(String userId);
+
+    Cart removeCartItemsBatch(String userId, RemoveCartItemsRequest request);
 }
