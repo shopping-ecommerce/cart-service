@@ -3,6 +3,8 @@ package iuh.fit.se.dto.request;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Map;
+
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -11,5 +13,5 @@ import lombok.experimental.FieldDefaults;
 public class CartItemRemoveRequest {
     String sellerId;
     String productId;
-    String size;
+    Map<String,String> options;
 }

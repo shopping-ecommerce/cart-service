@@ -15,6 +15,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -72,12 +74,12 @@ public class CartController {
             @PathVariable("userId") String userId,
             @PathVariable("productId") String productId,
             @RequestParam("sellerId") String sellerId,
-            @RequestParam(value = "size", required = false) String size) {
-
+            @RequestBody(required = false) Map<String,String> options // {"Size":"41","Color":"Black"}
+    ) {
         return ApiResponse.<Cart>builder()
                 .code(200)
                 .message("Cart item removed successfully")
-                .result(cartService.removeCartItem(userId, productId, sellerId, size))
+                .result(cartService.removeCartItem(userId, productId, sellerId,options))
                 .build();
     }
 

@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -17,5 +18,5 @@ public class CartItemSummaryResponse {
     Integer quantity;
     BigDecimal unitPrice;
     BigDecimal totalPrice;
-    String size;
+    Map<String,String> options;
 }
