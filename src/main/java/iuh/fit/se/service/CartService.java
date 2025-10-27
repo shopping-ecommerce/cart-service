@@ -7,6 +7,8 @@ import iuh.fit.se.dto.response.CartItemSummaryResponse;
 import iuh.fit.se.dto.response.CartSummaryResponse;
 import iuh.fit.se.entity.Cart;
 
+import java.util.Map;
+
 public interface CartService {
     Cart addToCart(AddToCartRequest request);
 
@@ -16,7 +18,7 @@ public interface CartService {
 
     Cart updateCartItem(UpdateCartItemRequest request);
 
-    Cart removeCartItem(String userId, String productId, String sellerId, String size);
+    Cart removeCartItem(String userId, String productId, String sellerId, Map<String,String> options);
 
     Cart clearCart(String userId);
 

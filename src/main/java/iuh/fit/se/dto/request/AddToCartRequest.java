@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -25,5 +26,5 @@ public class AddToCartRequest {
     @Min(value = 1, message = "Quantity must be at least 1")
     @Max(value = 5, message = "Quantity cannot exceed 5")
     Integer quantity;
-    String size;
+    Map<String,String> options;
 }

@@ -18,4 +18,5 @@ public class ProductResponse {
     String description;
     String categoryId;
     Instant createdAt;
+
 }

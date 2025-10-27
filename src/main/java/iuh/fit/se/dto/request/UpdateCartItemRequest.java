@@ -8,12 +8,14 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.Map;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UpdateCartItemRequest {
+public class    UpdateCartItemRequest {
     @NotNull(message = "Quantity is required")
     @Min(value = 1, message = "Quantity must be at least 1")
     @Max(value = 99, message = "Quantity must not exceed 99")
@@ -21,5 +23,5 @@ public class UpdateCartItemRequest {
     String userId;
     String productId;
     String sellerId;
-    String size;
+    Map<String,String> options;
 }
