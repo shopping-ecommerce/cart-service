@@ -24,4 +24,6 @@ public class    UpdateCartItemRequest {
     String productId;
     String sellerId;
     Map<String,String> options;
+    Map<String,String> originalOptions;
+    String sellerName;
 }

@@ -116,28 +116,128 @@ public class CartServiceImpl implements CartService {
     @Override
     public Cart updateCartItem(UpdateCartItemRequest request) {
         log.info("Updating cart item for user: {}", request.getUserId());
+        Cart cart = getOrCreateCart(request.getUserId());
 
-        Cart cart = getCartByUserId(request.getUserId());
+        Map<String, String> newOpts = Optional.ofNullable(request.getOptions())
+                .orElse(Collections.emptyMap());
+        Map<String, String> oldOpts = Optional.ofNullable(request.getOriginalOptions())
+                .orElse(newOpts); // nếu FE không gửi originalOptions, coi như không đổi options
 
-        // UNIQUE theo options
-        String uniqueKey = createUniqueKey(request.getSellerId(), request.getProductId(), request.getOptions());
-        CartItem item = cart.getItems().stream()
-                .filter(ci -> ci.getUniqueKey().equals(uniqueKey))
-                .findFirst()
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        String oldKey = createUniqueKey(request.getSellerId(), request.getProductId(), oldOpts);
+        String newKey = createUniqueKey(request.getSellerId(), request.getProductId(), newOpts);
 
-        if (request.getQuantity() == null || request.getQuantity() <= 0) {
-            cart.getItems().remove(item);
-            log.info("Removed item from cart");
+        int reqQty = Optional.ofNullable(request.getQuantity()).orElse(0);
+
+        // 1) Tìm dòng GỐC theo oldKey
+        Optional<CartItem> srcOpt = cart.getItems().stream()
+                .filter(ci -> ci.getUniqueKey().equals(oldKey))
+                .findFirst();
+
+        // Nếu không tìm thấy dòng gốc mà qty <= 0 -> no-op
+        if (srcOpt.isEmpty() && reqQty <= 0) {
+            log.info("No source line & non-positive qty -> no-op");
+            cart.calculateTotals();
+            return cartRepository.save(cart);
+        }
+
+        // Nếu không tìm thấy dòng gốc mà qty > 0 -> coi như ADD mới vào newKey
+        if (srcOpt.isEmpty()) {
+            ApiResponse<OrderItemProductResponse> productResponse =
+                    productClient.searchBySizeAndID(
+                            SearchSizeAndIDRequest.builder()
+                                    .id(request.getProductId())
+                                    .options(newOpts)
+                                    .build()
+                    );
+            if (productResponse == null || productResponse.getResult() == null) {
+                throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
+            }
+            OrderItemProductResponse p = productResponse.getResult();
+
+            CartItem newItem = CartItem.builder()
+                    .productId(request.getProductId())
+                    .sellerId(request.getSellerId())
+                    .sellerName(Optional.ofNullable(request.getSellerName()).orElse("Unknown seller"))
+                    .options(newOpts)
+                    .unitPrice(p.getPrice())
+                    .productImage(p.getImage())
+                    .productName(p.getName())
+                    .quantity(reqQty)
+                    .build();
+            newItem.calculateTotalPrice();
+            cart.getItems().add(newItem);
+            log.info("Source not found -> created new line {}", newItem.getUniqueKey());
+
+            cart.calculateTotals();
+            return cartRepository.save(cart);
+        }
+
+        // Có dòng gốc
+        CartItem src = srcOpt.get();
+
+        // 2) Nếu reqQty <= 0 -> xoá dòng gốc
+        if (reqQty <= 0) {
+            cart.getItems().remove(src);
+            log.info("Removed source line {}", src.getUniqueKey());
+            cart.calculateTotals();
+            return cartRepository.save(cart);
+        }
+
+        boolean changingOptions = !oldKey.equals(newKey);
+        if (!changingOptions) {
+            // 3) Không đổi biến thể -> chỉ update số lượng
+            src.setQuantity(reqQty);
+            src.calculateTotalPrice();
+            log.info("Updated qty on same variant to {}", reqQty);
         } else {
-            item.setQuantity(request.getQuantity());
-            item.calculateTotalPrice();
-            log.info("Updated item quantity to: {}", request.getQuantity());
+            // 4) Đổi biến thể -> chuyển (hoặc gộp) sang newKey
+            // 4.1 Lấy info biến thể mới
+            ApiResponse<OrderItemProductResponse> productResponse =
+                    productClient.searchBySizeAndID(
+                            SearchSizeAndIDRequest.builder()
+                                    .id(request.getProductId())
+                                    .options(newOpts)
+                                    .build()
+                    );
+            if (productResponse == null || productResponse.getResult() == null) {
+                throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
+            }
+            OrderItemProductResponse p = productResponse.getResult();
+
+            // 4.2 Kiểm tra có dòng đích trùng newKey chưa
+            Optional<CartItem> conflictOpt = cart.getItems().stream()
+                    .filter(ci -> ci.getUniqueKey().equals(newKey))
+                    .findFirst();
+
+            if (conflictOpt.isPresent()) {
+                // GỘP: giữ dòng đích, cộng số lượng (giữ nguyên chính sách: qty đích += reqQty)
+                CartItem dst = conflictOpt.get();
+                int mergedQty = dst.getQuantity() + reqQty; // hoặc: dst.getQuantity() + src.getQuantity()
+                dst.setQuantity(mergedQty);
+                dst.setUnitPrice(p.getPrice());
+                dst.setProductImage(p.getImage());
+                dst.setProductName(p.getName());
+                dst.calculateTotalPrice();
+
+                // Xoá dòng gốc
+                cart.getItems().remove(src);
+                log.info("Merged into existing line {}, new qty={}", dst.getUniqueKey(), mergedQty);
+            } else {
+                // Không có xung đột -> chuyển dòng gốc sang biến thể mới
+                src.setOptions(newOpts);
+                src.setUnitPrice(p.getPrice());
+                src.setProductImage(p.getImage());
+                src.setProductName(p.getName());
+                src.setQuantity(reqQty); // giữ qty theo yêu cầu
+                src.calculateTotalPrice();
+                log.info("Moved line from {} -> {}", oldKey, newKey);
+            }
         }
 
         cart.calculateTotals();
         return cartRepository.save(cart);
     }
+
 
     @Override
     public Cart removeCartItem(String userId, String productId, String sellerId, Map<String,String> options) {
